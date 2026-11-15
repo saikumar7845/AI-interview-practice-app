@@ -31,11 +31,13 @@ if not api_key:
 # 2. Initialize Gemini Client
 client = genai.Client(api_key=api_key)
 
-# Model fallback list for maximum compatibility across environments
+# Model fallback list for high speed, availability, and resilience
 MODEL_CANDIDATES = [
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
+    "gemini-3.1-flash-lite",
+    "gemini-3.5-flash-lite",
+    "gemini-3.5-flash",
+    "gemini-3.8-flash",
+    "gemini-4-hydrogen",
 ]
 
 # Allow custom model override from secrets or environment if provided
@@ -67,10 +69,15 @@ def ask_ai(prompt: str) -> str:
         except Exception as exc:
             last_error = exc
             err_msg = str(exc).lower()
-            # If the error is not a model availability error (e.g. invalid key, quota), stop retrying
-            if "not found" not in err_msg and "404" not in err_msg and "unsupported" not in err_msg:
-                raise exc
-            continue
+            # If the error is model availability or temporary load (404, 503, unavailable), fallback to next candidate
+            retryable = any(
+                code in err_msg
+                for code in ["not found", "404", "503", "unavailable", "unsupported", "demand"]
+            )
+            if retryable:
+                continue
+            # For auth or rate limit quota errors, raise immediately
+            raise exc
 
     if last_error:
         raise last_error
