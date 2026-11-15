@@ -1,0 +1,20 @@
+# Virtual environments
+saikumar/
+.venv/
+venv/
+env/
+
+# API keys and secrets
+.streamlit/secrets.toml
+.env
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
